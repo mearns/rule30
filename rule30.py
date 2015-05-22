@@ -139,30 +139,35 @@ def blend(im1, im2, w1=0.5, w2=0.5):
 if __name__ == '__main__':
 
 
-    lifetime = 10
+    lifetime = 6
     conquerable = 0
+    amiable = 100
     breadth = 50
     generations = 200
     gs = 20
     bs = 20
-    gf = 22
-    bf = 22
+    gf = 25
+    bf = 25
 
     TWO_PI = 2.0*math.pi
 
 
-    a = Automaton.from_hash('Input Test', breadth=breadth)
+    a = Automaton.from_hash('2Input Test', breadth=breadth)
 
     breadth = len(a.peek())
-    im = Image.new('RGB', [gs*generations, bs*breadth], 0x222200)
+    im = Image.new('RGB', [gs*generations, bs*breadth], 0x223300)
     draw = ImageDraw.Draw(im)
 
+    #phase_shift = 2.0*math.pi/3.0 #(120 deg out of phase)
+    phase_shift = 1.0
+    midpoint = 170.0
+    color_range = 85.0
     def get_color(v, phase=0):
         age = float(v) / float(lifetime)
-        factor = math.pow(age, 0.5)
-        r = 128 + (127.0*math.sin(math.pi*age + 0.0*math.pi/3.0 + phase))
-        g = 128 + (127.0*math.sin(math.pi*age + 2.0*math.pi/3.0 + phase))
-        b = 128 + (127.0*math.sin(math.pi*age + 4.0*math.pi/3.0 + phase))
+        factor = math.pow(age, 2.0)
+        b = 140 + (115.0*math.sin(math.pi*age + 0.0*phase_shift + phase))
+        g = midpoint + (color_range*math.sin(math.pi*age + 1.0*phase_shift + phase))
+        r = midpoint + (color_range*math.sin(math.pi*age + 2.0*phase_shift + phase))
         r, g, b, = (int(c*factor) for c in (r,g,b))
         return b << 16 | g << 8 | r
 
@@ -183,14 +188,14 @@ if __name__ == '__main__':
 
     gen = [0] * breadth
     for i in xrange(generations):
-        row_phase = (float(i) / float(generations)) * TWO_PI
+        row_phase = TWO_PI/5.0 + (float(i) / float(generations)) * TWO_PI
         row = Ring(a.next())
         for j, c in enumerate(row):
-            if c == 1 and gen[j] <= conquerable:
+            if c == 1 and (gen[j] <= conquerable or gen[j] >= amiable):
                 gen[j] = float(lifetime)
 
             if gen[j] > 0:
-                phase = row_phase + (float(j) / float(breadth) * (TWO_PI / 3.0))
+                phase = row_phase + (float(j) / float(breadth) * (TWO_PI / 5.0))
                 color = get_color(gen[j], phase)
                 if gs > 1 or bs > 1:
                     draw.ellipse([gs*i, bs*j, (gs*i)+gf, (bs*j)+bf], fill=color)
@@ -200,7 +205,7 @@ if __name__ == '__main__':
                 gen[j] -= drain
 
     #im = im.filter(ImageFilter.BLUR).filter(ImageFilter.SHARPEN)
-    im = im.filter(ImageFilter.GaussianBlur(radius=4))
+    im = im.filter(ImageFilter.GaussianBlur(radius=2))
     im = im.resize([5*generations, 5*breadth], Image.LANCZOS)
     im.save('test_output.png', 'PNG')
 
