@@ -5,6 +5,7 @@ import sys
 import random
 import hashlib
 import math
+from PIL import Image, ImageDraw, ImageFilter, ImageChops
 
 import collections
 
@@ -121,13 +122,25 @@ class Automaton(object):
         return cls(bits[:breadth], toggle, erase, fill, rand)
         
         
+def blend(im1, im2, w1=0.5, w2=0.5):
+    p1 = im1.load()
+    p2 = im2.load()
+    sz = im1.size
+    im = Image.new('RGB', sz)
+    pix = im.load()
+
+    for i in xrange(sz[0]):
+        for j in xrange(sz[1]):
+            pix[i,j] = tuple(int(float(p1[i,j][k])*w1 + float(p2[i,j][k])*w2) for k in (0,1,2))
+
+    return im
 
     
 if __name__ == '__main__':
 
-    from PIL import Image, ImageDraw, ImageFilter
 
     lifetime = 10
+    conquerable = 0
     breadth = 50
     generations = 200
     gs = 20
@@ -147,19 +160,34 @@ if __name__ == '__main__':
     def get_color(v, phase=0):
         age = float(v) / float(lifetime)
         factor = math.pow(age, 0.5)
-        r = 128 + (127.0*math.sin(TWO_PI*age + 0.0*math.pi/3.0 + phase))
-        g = 128 + (127.0*math.sin(TWO_PI*age + 2.0*math.pi/3.0 + phase))
-        b = 128 + (127.0*math.sin(TWO_PI*age + 4.0*math.pi/3.0 + phase))
+        r = 128 + (127.0*math.sin(math.pi*age + 0.0*math.pi/3.0 + phase))
+        g = 128 + (127.0*math.sin(math.pi*age + 2.0*math.pi/3.0 + phase))
+        b = 128 + (127.0*math.sin(math.pi*age + 4.0*math.pi/3.0 + phase))
         r, g, b, = (int(c*factor) for c in (r,g,b))
         return b << 16 | g << 8 | r
+
+    def get_constant_drain(ring, idx, dist, power=None):
+        return 1.0
+
+    def get_weighted_drain(ring, idx, dist, power=-1.0):
+        s = 1.0
+        for i in xrange(1, dist+1):
+            if ring[idx+i] or ring[idx-i]:
+                weight = math.pow(float(i+1), power)
+                s += weight
+        return s
+
+    get_drain = get_constant_drain
+
+        
 
     gen = [0] * breadth
     for i in xrange(generations):
         row_phase = (float(i) / float(generations)) * TWO_PI
         row = Ring(a.next())
         for j, c in enumerate(row):
-            if c == 1 and gen[j] == 0:
-                gen[j] = lifetime
+            if c == 1 and gen[j] <= conquerable:
+                gen[j] = float(lifetime)
 
             if gen[j] > 0:
                 phase = row_phase + (float(j) / float(breadth) * (TWO_PI / 3.0))
@@ -168,9 +196,11 @@ if __name__ == '__main__':
                     draw.ellipse([gs*i, bs*j, (gs*i)+gf, (bs*j)+bf], fill=color)
                 else:
                     im.putpixel([i, j], color)
-                gen[j] -= 1
+                drain = get_drain(row, j, 1, -3.0)
+                gen[j] -= drain
 
-    im = im.filter(ImageFilter.BLUR).filter(ImageFilter.SHARPEN)
+    #im = im.filter(ImageFilter.BLUR).filter(ImageFilter.SHARPEN)
+    im = im.filter(ImageFilter.GaussianBlur(radius=4))
     im = im.resize([5*generations, 5*breadth], Image.LANCZOS)
     im.save('test_output.png', 'PNG')
 
