@@ -142,8 +142,8 @@ if __name__ == '__main__':
     lifetime = 6
     conquerable = 0
     amiable = 100
-    breadth = 50
-    generations = 200
+    breadth = 40
+    generations = 700
     gs = 20
     bs = 20
     gf = 25
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     TWO_PI = 2.0*math.pi
 
 
-    a = Automaton.from_hash('2Input Test', breadth=breadth)
+    a = Automaton.from_hash('This is a test', breadth=breadth)
 
     breadth = len(a.peek())
     im = Image.new('RGB', [gs*generations, bs*breadth], 0x223300)
@@ -205,7 +205,7 @@ if __name__ == '__main__':
                 gen[j] -= drain
 
     #im = im.filter(ImageFilter.BLUR).filter(ImageFilter.SHARPEN)
-    im = im.filter(ImageFilter.GaussianBlur(radius=2))
+    im = im.filter(ImageFilter.GaussianBlur(radius=6))
     im = im.resize([5*generations, 5*breadth], Image.LANCZOS)
     im.save('test_output.png', 'PNG')
 
