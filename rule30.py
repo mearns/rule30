@@ -142,12 +142,12 @@ if __name__ == '__main__':
     lifetime = 6
     conquerable = 0
     amiable = 100
-    breadth = 40
-    generations = 700
+    breadth = 71
+    generations = 234
     gs = 20
     bs = 20
-    gf = 25
-    bf = 25
+    gf = 12
+    bf = 12
 
     TWO_PI = 2.0*math.pi
 
@@ -160,12 +160,12 @@ if __name__ == '__main__':
 
     #phase_shift = 2.0*math.pi/3.0 #(120 deg out of phase)
     phase_shift = 1.0
-    midpoint = 170.0
-    color_range = 85.0
+    midpoint = 120.0
+    color_range = 55.0
     def get_color(v, phase=0):
         age = float(v) / float(lifetime)
         factor = math.pow(age, 2.0)
-        b = 140 + (115.0*math.sin(math.pi*age + 0.0*phase_shift + phase))
+        b = 120 + (55.0*math.sin(math.pi*age + 0.0*phase_shift + phase))
         g = midpoint + (color_range*math.sin(math.pi*age + 1.0*phase_shift + phase))
         r = midpoint + (color_range*math.sin(math.pi*age + 2.0*phase_shift + phase))
         r, g, b, = (int(c*factor) for c in (r,g,b))
@@ -205,8 +205,8 @@ if __name__ == '__main__':
                 gen[j] -= drain
 
     #im = im.filter(ImageFilter.BLUR).filter(ImageFilter.SHARPEN)
-    im = im.filter(ImageFilter.GaussianBlur(radius=6))
-    im = im.resize([5*generations, 5*breadth], Image.LANCZOS)
+    #im = im.filter(ImageFilter.GaussianBlur(radius=3))
+    im = im.resize([6*generations, 6*breadth], Image.LANCZOS)
     im.save('test_output.png', 'PNG')
 
 
